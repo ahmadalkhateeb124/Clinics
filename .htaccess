@@ -1,0 +1,40 @@
+# ── Nour's Touch Clinic — Public Site ─────────────────────────────────────
+Options -Indexes -MultiViews
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /nourstouch/
+
+    # Block dotfiles
+    RewriteRule (^|/)\. - [F]
+
+    # Don't rewrite real files/dirs
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # sitemap.xml served by index.php
+    RewriteRule ^sitemap\.xml$ index.php?url=sitemap.xml [L]
+
+    # Friendly URLs → index.php?url=...
+    RewriteRule ^([^/]+)/?$ index.php?url=$1 [QSA,L]
+    RewriteRule ^([^/]+)/([^/]+)/?$ index.php?url=$1&puid=$2 [QSA,L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Block sensitive files
+<FilesMatch "\.(env|sql|log|md|json|lock|ini|sh)$">
+    Require all denied
+</FilesMatch>
+
+<Files "*credentials*">
+    Require all denied
+</Files>

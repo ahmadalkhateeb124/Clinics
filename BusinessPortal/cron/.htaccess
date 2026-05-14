@@ -1,0 +1,2 @@
+# Cron scripts must only run from CLI
+Require all denied

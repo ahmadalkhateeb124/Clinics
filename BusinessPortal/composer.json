@@ -1,0 +1,9 @@
+{
+    "name": "nourstouch/admin",
+    "description": "Nour's Touch Clinic admin portal vendors",
+    "require": {
+        "dompdf/dompdf": "^2.0",
+        "phpmailer/phpmailer": "^6.9",
+        "mpdf/mpdf": "^8.3"
+    }
+}

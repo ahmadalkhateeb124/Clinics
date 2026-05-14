@@ -1,0 +1,127 @@
+/* ════════════════════════════════════════════════════════════════════
+   Nour's Touch — Public site theme
+   ════════════════════════════════════════════════════════════════════ */
+:root {
+    --nt-teal:      #14b8a6;
+    --nt-teal-dark: #0d9488;
+    --nt-teal-soft: #ccfbf1;
+    --nt-mint:      #d1fae5;
+    --nt-soft:      #f0fdfa;
+}
+
+body {
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: 500;
+    color: #1f2937;
+    background: #fff;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+h1, h2, h3, h4, h5, h6, .navbar-brand { font-weight: 700; }
+.btn, .form-control, .form-select, .badge { font-family: inherit; }
+
+.text-teal { color: var(--nt-teal) !important; }
+.bg-teal   { background: var(--nt-teal) !important; }
+.bg-soft   { background: var(--nt-soft) !important; }
+.btn-teal {
+    background: var(--nt-teal);
+    color: #fff;
+    border: none;
+    transition: .2s;
+}
+.btn-teal:hover, .btn-teal:focus { background: var(--nt-teal-dark); color: #fff; }
+.btn-outline-teal {
+    border: 1px solid var(--nt-teal);
+    color: var(--nt-teal);
+    background: transparent;
+}
+.btn-outline-teal:hover { background: var(--nt-teal); color: #fff; }
+
+.site-header .nav-link { color: #1f2937; font-weight: 500; padding: .5rem 1rem; }
+.site-header .nav-link:hover, .site-header .nav-link.active { color: var(--nt-teal); }
+.card { border-radius: 14px; border: 1px solid #e5e7eb; }
+
+/* Hero */
+.hero-section {
+    background: linear-gradient(135deg, var(--nt-teal-soft) 0%, #ffffff 60%, var(--nt-mint) 100%);
+    padding: 5rem 0;
+}
+.hero-section h1 { font-weight: 800; }
+
+/* Service cards */
+.service-card {
+    transition: .25s;
+    height: 100%;
+}
+.service-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(20, 184, 166, .15);
+}
+.service-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--nt-teal-soft);
+    color: var(--nt-teal);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+}
+
+/* Therapist / package cards */
+.therapist-card img,
+.package-card .pkg-icon {
+    border-radius: 14px;
+}
+.package-card { background: #fff; transition: .25s; }
+.package-card:hover { box-shadow: 0 12px 28px rgba(20,184,166,.18); }
+.pkg-price {
+    font-size: 1.75rem;
+    color: var(--nt-teal);
+    font-weight: 800;
+}
+
+/* Section heading */
+.section-title {
+    font-weight: 700;
+    margin-bottom: .35rem;
+}
+.section-subtitle {
+    color: #6b7280;
+    margin-bottom: 2.5rem;
+}
+
+/* Blog cards */
+.blog-card img {
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+}
+.blog-card .badge { background: var(--nt-teal-soft); color: var(--nt-teal); }
+
+/* Testimonials */
+.testimonial-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 18px rgba(0,0,0,.04);
+    height: 100%;
+}
+.testimonial-card .stars { color: #f59e0b; }
+
+/* Booking form */
+.booking-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(20, 184, 166, .12);
+    padding: 2rem;
+}
+
+/* Footer */
+.site-footer { background: #0f172a !important; }
+.site-footer h5, .site-footer h6 { color: #fff; font-weight: 700; }
+.site-footer a { text-decoration: none; }
+.site-footer a:hover { color: var(--nt-teal) !important; }

@@ -1,0 +1,26 @@
+.DS_Store
+*.log
+inc/db.credentials.php
+inc/mail.credentials.php
+BusinessPortal/config/database.credentials.php
+BusinessPortal/config/mail.credentials.php
+uploads/patients/*
+uploads/employees/*
+!uploads/**/.gitkeep
+vendor/
+node_modules/
+.idea/
+.vscode/
+*.sql.gz
+backups/
+
+# Stray editor temp files
+BusinessPortal/admin/XX*
+
+# mPDF & DomPDF caches (regenerated)
+BusinessPortal/storage/mpdf/mpdf/
+BusinessPortal/storage/mpdf/current_logo.*
+
+# System
+.DS_Store
+*.log

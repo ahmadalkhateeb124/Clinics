@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /BusinessPortal/
+Disallow: /inc/
+Disallow: /uploads/patients/
+Disallow: /uploads/employees/
+
+Sitemap: /sitemap.php
