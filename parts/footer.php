@@ -1,52 +1,90 @@
-<footer class="site-footer bg-dark text-white pt-5 pb-3 mt-5">
+<?php
+$footerLogo = site_setting('clinic_logo', '');
+$footerName = ($lang === 'en')
+    ? (site_setting('site_name_en', '') ?: site_setting('site_name_ar', '') ?: t('site_name'))
+    : (site_setting('site_name_ar', '') ?: site_setting('site_name_en', '') ?: t('site_name'));
+?>
+
+<footer class="site-footer">
     <div class="container">
-        <div class="row gy-4">
-            <div class="col-md-4">
-                <h5 class="text-teal"><i class="fa-solid fa-spa me-2"></i><?= e(t('site_name')) ?></h5>
-                <p class="small">عيادة متعددة الخدمات: علاج طبيعي، تصريف سوائل، مساج، حجامة، تقشير، استشارات طبية.</p>
-                <div class="d-flex gap-2 mt-2">
+
+        <div class="site-footer-top">
+            <!-- Brand & tagline -->
+            <div class="footer-brand">
+                <?php if ($footerLogo): ?>
+                    <img src="<?= $base_url ?>uploads/<?= e($footerLogo) ?>" alt="<?= e($footerName) ?>" class="footer-brand-logo">
+                <?php else: ?>
+                    <span class="footer-brand-name"><?= e($footerName) ?></span>
+                <?php endif; ?>
+                <p class="footer-tagline"><?= t('footer_about', 'علاج طبيعي · مساج · حجامة · تقشير · استشارات. كل ذلك بأيدٍ خبيرة، ولمسة دافئة.') ?></p>
+                <div class="footer-social">
                     <?php $fb = site_setting('social_facebook',''); if ($fb): ?>
-                        <a href="<?= e($fb) ?>" class="text-white-50" target="_blank"><i class="fa-brands fa-facebook fa-lg"></i></a>
+                        <a href="<?= e($fb) ?>" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
                     <?php endif; ?>
                     <?php $ig = site_setting('social_instagram',''); if ($ig): ?>
-                        <a href="<?= e($ig) ?>" class="text-white-50" target="_blank"><i class="fa-brands fa-instagram fa-lg"></i></a>
+                        <a href="<?= e($ig) ?>" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
                     <?php endif; ?>
                     <?php $wa = site_setting('contact_phone',''); if ($wa): ?>
-                        <a href="<?= wa_link($wa) ?>" class="text-white-50" target="_blank"><i class="fa-brands fa-whatsapp fa-lg"></i></a>
+                        <a href="<?= wa_link($wa) ?>" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
                     <?php endif; ?>
+                    <a href="mailto:<?= e(site_setting('contact_email','info@nourstouch.com')) ?>" aria-label="Email"><i class="fa-regular fa-envelope"></i></a>
                 </div>
             </div>
-            <div class="col-md-4">
-                <h6><?= t('contact') ?></h6>
-                <p class="small mb-1"><i class="fa-solid fa-phone me-2"></i>
-                    <a class="text-white-50" href="<?= tel_link(site_setting('contact_phone','+962700000000')) ?>"><?= e(site_setting('contact_phone', '+962 7 0000 0000')) ?></a>
-                </p>
-                <p class="small mb-1"><i class="fa-solid fa-envelope me-2"></i>
-                    <a class="text-white-50" href="mailto:<?= e(site_setting('contact_email','info@nourstouch.com')) ?>"><?= e(site_setting('contact_email','info@nourstouch.com')) ?></a>
-                </p>
-                <p class="small mb-1"><i class="fa-solid fa-location-dot me-2"></i><?= e(site_setting('address', 'Amman, Jordan')) ?></p>
-                <p class="small mb-1"><i class="fa-regular fa-clock me-2"></i><?= e(site_setting('working_hours_from','09:00')) ?> – <?= e(site_setting('working_hours_to','21:00')) ?></p>
+
+            <!-- Explore -->
+            <div class="footer-col">
+                <h6><?= t('explore', 'استكشف') ?></h6>
+                <ul>
+                    <li><a href="<?= $base_url ?>about"><?= t('about') ?></a></li>
+                    <li><a href="<?= $base_url ?>services"><?= t('services') ?></a></li>
+                    <li><a href="<?= $base_url ?>therapists"><?= t('therapists') ?></a></li>
+                    <li><a href="<?= $base_url ?>packages"><?= t('packages') ?></a></li>
+                    <li><a href="<?= $base_url ?>blog"><?= t('blog') ?></a></li>
+                </ul>
             </div>
-            <div class="col-md-4">
-                <h6>روابط</h6>
-                <ul class="list-unstyled small">
-                    <li><a href="<?= $base_url ?>about"     class="text-white-50"><?= t('about') ?></a></li>
-                    <li><a href="<?= $base_url ?>services"  class="text-white-50"><?= t('services') ?></a></li>
-                    <li><a href="<?= $base_url ?>packages"  class="text-white-50"><?= t('packages') ?></a></li>
-                    <li><a href="<?= $base_url ?>blog"      class="text-white-50"><?= t('blog') ?></a></li>
-                    <li><a href="<?= $base_url ?>booking"   class="text-white-50"><?= t('book_now') ?></a></li>
-                    <li><a href="<?= $base_url ?>privacy"   class="text-white-50">سياسة الخصوصية</a></li>
-                    <li><a href="<?= $base_url ?>terms"     class="text-white-50">الشروط والأحكام</a></li>
+
+            <!-- Visit -->
+            <div class="footer-col">
+                <h6><?= t('visit', 'زرنا') ?></h6>
+                <ul>
+                    <li><a href="<?= $base_url ?>contact"><?= t('contact') ?></a></li>
+                    <li><a href="<?= $base_url ?>booking"><?= t('book_now') ?></a></li>
+                    <li><a href="<?= $base_url ?>gallery"><?= t('gallery', 'Gallery') ?></a></li>
+                    <li><a href="<?= $base_url ?>BusinessPortal/auth/login.php"><i class="fa-solid fa-lock" style="font-size:.72rem;margin-inline-end:.35rem;opacity:.7"></i><?= t('staff_login','تسجيل دخول الفريق') ?></a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div class="footer-col">
+                <h6><?= t('contact') ?></h6>
+                <ul class="footer-contact">
+                    <li>
+                        <i class="fa-solid fa-location-dot"></i>
+                        <?= e(site_setting('address', 'Amman, Jordan')) ?>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-phone"></i>
+                        <a href="<?= tel_link(site_setting('contact_phone','+962700000000')) ?>" dir="ltr"><?= e(site_setting('contact_phone', '+962 7 0000 0000')) ?></a>
+                    </li>
+                    <li>
+                        <i class="fa-regular fa-envelope"></i>
+                        <a href="mailto:<?= e(site_setting('contact_email','info@nourstouch.com')) ?>" dir="ltr"><?= e(site_setting('contact_email','info@nourstouch.com')) ?></a>
+                    </li>
+                    <li>
+                        <i class="fa-regular fa-clock"></i>
+                        <span dir="ltr"><?= e(site_setting('working_hours_from','09:00')) ?> – <?= e(site_setting('working_hours_to','21:00')) ?></span>
+                    </li>
                 </ul>
             </div>
         </div>
-        <hr class="border-secondary">
-        <div class="text-center small">© <?= date('Y') ?> <?= e(t('site_name')) ?>. جميع الحقوق محفوظة.</div>
+
+        <div class="site-footer-bottom">
+            <div>© <?= date('Y') ?> <?= e($footerName) ?>. <?= t('all_rights_reserved', 'جميع الحقوق محفوظة.') ?></div>
+            <div><?= t('crafted_in', 'صُنع بعناية في عمّان.') ?></div>
+        </div>
     </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-<script>AOS.init({ duration: 700, once: true });</script>
 </body>
 </html>

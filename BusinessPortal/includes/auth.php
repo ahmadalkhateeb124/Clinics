@@ -1,8 +1,72 @@
 <?php
 // ── Authentication helpers ───────────────────────────────────────────────
 
+const REMEMBER_COOKIE = 'bp_remember';
+const REMEMBER_TTL    = 60 * 60 * 24 * 30; // 30 days
+
 function isLoggedIn(): bool {
-    return !empty($_SESSION['user_id']);
+    if (!empty($_SESSION['user_id'])) return true;
+    return tryRememberLogin();
+}
+
+function rememberCookieParams(): array {
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    return [
+        'expires'  => time() + REMEMBER_TTL,
+        'path'     => '/',
+        'secure'   => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ];
+}
+
+function issueRememberCookie(int $userId): void {
+    $raw  = bin2hex(random_bytes(32));
+    $hash = hash('sha256', $raw);
+    db()->prepare("UPDATE users SET remember_token = ? WHERE id = ?")->execute([$hash, $userId]);
+    setcookie(REMEMBER_COOKIE, $userId . ':' . $raw, rememberCookieParams());
+}
+
+function clearRememberCookie(?int $userId = null): void {
+    if ($userId) {
+        db()->prepare("UPDATE users SET remember_token = NULL WHERE id = ?")->execute([$userId]);
+    }
+    if (isset($_COOKIE[REMEMBER_COOKIE])) {
+        $p = rememberCookieParams();
+        $p['expires'] = time() - 42000;
+        setcookie(REMEMBER_COOKIE, '', $p);
+        unset($_COOKIE[REMEMBER_COOKIE]);
+    }
+}
+
+function tryRememberLogin(): bool {
+    if (!empty($_SESSION['user_id'])) return true;
+    if (empty($_COOKIE[REMEMBER_COOKIE])) return false;
+
+    $parts = explode(':', $_COOKIE[REMEMBER_COOKIE], 2);
+    if (count($parts) !== 2) { clearRememberCookie(); return false; }
+    [$uid, $raw] = $parts;
+    $uid = (int)$uid;
+    if ($uid <= 0 || !ctype_xdigit($raw) || strlen($raw) !== 64) { clearRememberCookie(); return false; }
+
+    $stmt = db()->prepare("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL AND status='active' LIMIT 1");
+    $stmt->execute([$uid]);
+    $user = $stmt->fetch();
+    if (!$user || empty($user['remember_token'])) { clearRememberCookie(); return false; }
+
+    if (!hash_equals($user['remember_token'], hash('sha256', $raw))) {
+        clearRememberCookie();
+        return false;
+    }
+
+    $_SESSION['user_id']    = (int)$user['id'];
+    $_SESSION['user_name']  = $user['name'];
+    $_SESSION['user_email'] = $user['email'];
+    session_regenerate_id(true);
+
+    // Rotate token on every auto-login
+    issueRememberCookie((int)$user['id']);
+    return true;
 }
 
 function currentUser(): ?array {
@@ -48,7 +112,7 @@ function logLoginAttempt(string $email, bool $success): void {
         ->execute([$email, client_ip(), $success ? 1 : 0]);
 }
 
-function attemptLogin(string $email, string $password): array {
+function attemptLogin(string $email, string $password, bool $remember = false): array {
     if (loginThrottled($email)) {
         return ['ok' => false, 'msg' => 'Too many failed attempts. Try again in 15 minutes.'];
     }
@@ -79,11 +143,19 @@ function attemptLogin(string $email, string $password): array {
     db()->prepare("UPDATE users SET last_login_at = NOW(), last_login_ip = ? WHERE id = ?")
         ->execute([client_ip(), $user['id']]);
 
+    if ($remember) {
+        issueRememberCookie((int)$user['id']);
+    } else {
+        clearRememberCookie((int)$user['id']);
+    }
+
     logLoginAttempt($email, true);
     return ['ok' => true, 'user' => $user];
 }
 
 function logout(): void {
+    $uid = $_SESSION['user_id'] ?? null;
+    clearRememberCookie($uid ? (int)$uid : null);
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();

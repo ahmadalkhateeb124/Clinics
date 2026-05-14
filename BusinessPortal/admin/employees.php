@@ -21,9 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['create','edit']
 
     $userId    = (int)($_POST['user_id'] ?? 0);
     $first     = trim($_POST['first_name'] ?? '');
+    $firstEn   = trim($_POST['first_name_en'] ?? '');
     $last      = trim($_POST['last_name'] ?? '');
+    $lastEn    = trim($_POST['last_name_en'] ?? '');
     $job       = trim($_POST['job_title'] ?? '');
+    $jobEn     = trim($_POST['job_title_en'] ?? '');
     $dept      = trim($_POST['department'] ?? '');
+    $deptEn    = trim($_POST['department_en'] ?? '');
+    $bioAr     = trim($_POST['bio_ar'] ?? '');
+    $bioEn     = trim($_POST['bio_en'] ?? '');
+    $showSite  = isset($_POST['show_on_site']) ? 1 : 0;
+
+    // Avatar upload (optional)
+    $avatar = null;
+    if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $up = upload_file($_FILES['avatar'], 'employees', ['jpg','jpeg','png','webp'], 4*1024*1024);
+        if ($up) $avatar = $up['relative_path'];
+    }
     $natId     = trim($_POST['national_id'] ?? '');
     $phone     = trim($_POST['phone'] ?? '');
     $dob       = trim($_POST['dob'] ?? '') ?: null;
@@ -57,32 +71,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['create','edit']
 
     if ($action === 'create') {
         db()->prepare("INSERT INTO employees
-            (user_id,code,first_name,last_name,job_title,department,national_id,phone,dob,gender,address,
+            (user_id,code,first_name,first_name_en,last_name,last_name_en,job_title,job_title_en,
+             department,department_en,avatar,national_id,phone,dob,gender,address,
              hire_date,termination_date,contract_type,base_salary,commission_default_pct,
-             bank_name,bank_account,iban,emergency_name,emergency_phone,notes,is_active,
-             created_by,created_at,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())")
+             bank_name,bank_account,iban,emergency_name,emergency_phone,notes,bio_ar,bio_en,
+             is_active,show_on_site,created_by,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())")
             ->execute([
-                $userId, next_employee_code(), $first,$last,$job,$dept,$natId,$phone,$dob,$gender,$address,
+                $userId, next_employee_code(), $first,$firstEn,$last,$lastEn,$job,$jobEn,$dept,$deptEn,
+                $avatar,$natId,$phone,$dob,$gender,$address,
                 $hireDate,$term,$contract,$base,$commPct,
-                $bankName,$bankAcc,$iban,$emName,$emPhone,$notes,$active,
-                $_SESSION['user_id']
+                $bankName,$bankAcc,$iban,$emName,$emPhone,$notes,$bioAr,$bioEn,
+                $active,$showSite,$_SESSION['user_id']
             ]);
         $eid = (int)db()->lastInsertId();
         log_activity('created','employees',"Created employee #$eid ($first $last)",'employee',$eid);
     } else {
-        db()->prepare("UPDATE employees SET
-            user_id=?,first_name=?,last_name=?,job_title=?,department=?,national_id=?,phone=?,dob=?,gender=?,address=?,
-            hire_date=?,termination_date=?,contract_type=?,base_salary=?,commission_default_pct=?,
-            bank_name=?,bank_account=?,iban=?,emergency_name=?,emergency_phone=?,notes=?,is_active=?,
-            updated_by=?,updated_at=NOW()
-            WHERE id=?")
-            ->execute([
-                $userId,$first,$last,$job,$dept,$natId,$phone,$dob,$gender,$address,
-                $hireDate,$term,$contract,$base,$commPct,
-                $bankName,$bankAcc,$iban,$emName,$emPhone,$notes,$active,
-                $_SESSION['user_id'],$id
-            ]);
+        // Build SET clause + params in lock-step order
+        $set = [
+            'user_id=?'                => $userId,
+            'first_name=?'             => $first,
+            'first_name_en=?'          => $firstEn,
+            'last_name=?'              => $last,
+            'last_name_en=?'           => $lastEn,
+            'job_title=?'              => $job,
+            'job_title_en=?'           => $jobEn,
+            'department=?'             => $dept,
+            'department_en=?'          => $deptEn,
+            'national_id=?'            => $natId,
+            'phone=?'                  => $phone,
+            'dob=?'                    => $dob,
+            'gender=?'                 => $gender,
+            'address=?'                => $address,
+            'hire_date=?'              => $hireDate,
+            'termination_date=?'       => $term,
+            'contract_type=?'          => $contract,
+            'base_salary=?'            => $base,
+            'commission_default_pct=?' => $commPct,
+            'bank_name=?'              => $bankName,
+            'bank_account=?'           => $bankAcc,
+            'iban=?'                   => $iban,
+            'emergency_name=?'         => $emName,
+            'emergency_phone=?'        => $emPhone,
+            'notes=?'                  => $notes,
+            'bio_ar=?'                 => $bioAr,
+            'bio_en=?'                 => $bioEn,
+            'is_active=?'              => $active,
+            'show_on_site=?'           => $showSite,
+            'updated_by=?'             => $_SESSION['user_id'],
+        ];
+        if ($avatar !== null) $set['avatar=?'] = $avatar;
+
+        $sql    = "UPDATE employees SET " . implode(', ', array_keys($set)) . ", updated_at=NOW() WHERE id=?";
+        $params = array_values($set);
+        $params[] = $id;
+
+        db()->prepare($sql)->execute($params);
         log_activity('updated','employees',"Updated employee #$id",'employee',$id);
     }
     flash('success','Employee saved.');
@@ -91,12 +135,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['create','edit']
 
 if (in_array($action, ['create','edit'], true)) {
     require_can($action==='create'?'employees.create':'employees.edit');
-    $emp = ['user_id'=>0,'code'=>'','first_name'=>'','last_name'=>'','job_title'=>'','department'=>'',
+    $emp = ['user_id'=>0,'code'=>'',
+            'first_name'=>'','first_name_en'=>'','last_name'=>'','last_name_en'=>'',
+            'job_title'=>'','job_title_en'=>'','department'=>'','department_en'=>'',
             'national_id'=>'','phone'=>'','dob'=>'','gender'=>'','address'=>'',
             'hire_date'=>date('Y-m-d'),'termination_date'=>'','contract_type'=>'full_time',
             'base_salary'=>0,'commission_default_pct'=>0,
             'bank_name'=>'','bank_account'=>'','iban'=>'','emergency_name'=>'','emergency_phone'=>'',
-            'notes'=>'','is_active'=>1];
+            'notes'=>'','bio_ar'=>'','bio_en'=>'','is_active'=>1,'show_on_site'=>1];
     if ($action==='edit' && $id) {
         $s = db()->prepare("SELECT * FROM employees WHERE id=? AND deleted_at IS NULL");
         $s->execute([$id]); $emp = $s->fetch();
@@ -121,7 +167,7 @@ if (in_array($action, ['create','edit'], true)) {
             <?php if (!empty($emp['code'])): ?><small class="text-muted">[<?= e($emp['code']) ?>]</small><?php endif; ?>
         </h4>
 
-        <form method="post" class="card"><div class="card-body">
+        <form method="post" enctype="multipart/form-data" class="card"><div class="card-body">
             <?= csrf_field() ?>
 
             <h6 class="text-teal"><?= __('identity') ?></h6>
@@ -139,21 +185,37 @@ if (in_array($action, ['create','edit'], true)) {
                     <small class="text-muted"><?= __('user_account_help') ?></small>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label"><?= __('first_name') ?> *</label>
+                    <label class="form-label"><?= __('first_name') ?> (AR) *</label>
                     <input name="first_name" required class="form-control" value="<?= e($emp['first_name']) ?>">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label"><?= __('last_name') ?> *</label>
+                    <label class="form-label"><?= __('first_name') ?> (EN)</label>
+                    <input name="first_name_en" class="form-control" value="<?= e($emp['first_name_en'] ?? '') ?>" dir="ltr">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><?= __('last_name') ?> (AR) *</label>
                     <input name="last_name" required class="form-control" value="<?= e($emp['last_name']) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><?= __('last_name') ?> (EN)</label>
+                    <input name="last_name_en" class="form-control" value="<?= e($emp['last_name_en'] ?? '') ?>" dir="ltr">
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label"><?= __('job_title') ?></label>
+                    <label class="form-label"><?= __('job_title') ?> (AR)</label>
                     <input name="job_title" class="form-control" value="<?= e($emp['job_title']??'') ?>">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label"><?= __('department') ?></label>
+                    <label class="form-label"><?= __('job_title') ?> (EN)</label>
+                    <input name="job_title_en" class="form-control" value="<?= e($emp['job_title_en'] ?? '') ?>" dir="ltr">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><?= __('department') ?> (AR)</label>
                     <input name="department" class="form-control" value="<?= e($emp['department']??'') ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><?= __('department') ?> (EN)</label>
+                    <input name="department_en" class="form-control" value="<?= e($emp['department_en'] ?? '') ?>" dir="ltr">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label"><?= __('national_id') ?></label>
@@ -240,6 +302,37 @@ if (in_array($action, ['create','edit'], true)) {
             <div class="mb-3">
                 <label class="form-label"><?= __('notes') ?></label>
                 <textarea name="notes" rows="2" class="form-control"><?= e($emp['notes']??'') ?></textarea>
+            </div>
+
+            <!-- Public profile (shown on the website team page) -->
+            <h6 class="text-teal mt-4"><?= __('public_profile') ?></h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label"><?= __('avatar') ?: 'الصورة' ?></label>
+                    <input type="file" name="avatar" accept="image/*" class="form-control">
+                    <?php if (!empty($emp['avatar'])): ?>
+                        <img src="<?= UPLOADS_URL . e($emp['avatar']) ?>" class="mt-2 rounded" style="height:90px;width:90px;object-fit:cover">
+                    <?php endif; ?>
+                    <small class="text-muted d-block mt-1"><?= __('avatar_help') ?: 'صورة مربعة بحجم 800×800 يُفضّل' ?></small>
+                </div>
+                <div class="col-md-8">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label"><?= __('bio') ?> (AR)</label>
+                            <textarea name="bio_ar" rows="3" class="form-control" placeholder="نبذة قصيرة تظهر في صفحة الفريق على الموقع"><?= e($emp['bio_ar'] ?? '') ?></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label"><?= __('bio') ?> (EN)</label>
+                            <textarea name="bio_en" rows="3" class="form-control" placeholder="Short bio shown on the public team page" dir="ltr"><?= e($emp['bio_en'] ?? '') ?></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" name="show_on_site" <?= !empty($emp['show_on_site'])?'checked':'' ?>>
+                                <span class="form-check-label"><?= __('show_on_site') ?></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex gap-2">

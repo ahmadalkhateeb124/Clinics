@@ -78,5 +78,35 @@ function wa_link(string $phone): string {
 }
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
+function format_money($amount): string {
+    $symbol = site_setting('currency_symbol', site_setting('currency', 'JOD'));
+    return number_format((float)$amount, 2) . ' ' . $symbol;
+}
+
+function format_date($date, string $fmt = 'Y-m-d'): string {
+    if (!$date) return '';
+    $ts = is_numeric($date) ? (int)$date : strtotime((string)$date);
+    return $ts ? date($fmt, $ts) : '';
+}
+
+/**
+ * Pick the right language column from a DB row.
+ * Supports two naming patterns:
+ *   • `name_ar` + `name_en`      (services, packages, faqs, blog_posts…)
+ *   • `first_name` + `first_name_en`  (employees — Arabic is the base column)
+ *
+ * Example: tr($service, 'name')   → returns name_en if EN+non-empty, else name_ar
+ *          tr($employee, 'first_name') → returns first_name_en if EN+non-empty,
+ *                                        else first_name
+ */
+function tr(array $row, string $base): string {
+    global $lang;
+    $en = $row[$base.'_en'] ?? '';
+    // Arabic value: try `_ar` suffix first, then fall back to the base column
+    $ar = $row[$base.'_ar'] ?? ($row[$base] ?? '');
+    if ($lang === 'en') return ($en !== '' ? $en : $ar);
+    return ($ar !== '' ? $ar : $en);
+}
+
 // ── Language ─────────────────────────────────────────────────────────────
 require_once __DIR__ . '/lang_function.php';

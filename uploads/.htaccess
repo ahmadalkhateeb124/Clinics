@@ -1,0 +1,35 @@
+# ── Uploads hardening ────────────────────────────────────────────────────
+# Prevent execution of ANY script in this directory or its subdirectories.
+
+Options -Indexes -ExecCGI -MultiViews
+ServerSignature Off
+
+# Strip handlers that could execute uploaded files
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+RemoveHandler .php .phtml .phar .php3 .php4 .php5 .php7 .php8 .pl .py .jsp .asp .aspx .sh .cgi .htm .html .shtml
+RemoveType    .php .phtml .phar .php3 .php4 .php5 .php7 .php8 .pl .py .jsp .asp .aspx .sh .cgi
+
+<FilesMatch "\.(php|phtml|phar|php[3-8]?|pl|py|jsp|asp|aspx|sh|cgi|exe|bat|cmd|htaccess|htpasswd|ini|conf|env|sql|log)$">
+    Require all denied
+</FilesMatch>
+
+# Force generic content type for anything served from here (prevents sniffing)
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Disposition "inline"
+    Header always unset X-Powered-By
+</IfModule>
+
+# Hide dotfiles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

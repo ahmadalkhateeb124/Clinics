@@ -1,0 +1,18 @@
+# ── Public site /inc — block direct access except the public endpoints ───
+Options -Indexes -MultiViews
+ServerSignature Off
+
+# Default: deny everything
+<RequireAll>
+    Require all denied
+</RequireAll>
+
+# Allow only the public endpoints that the frontend actually calls
+<Files "check_availability.php">
+    Require all granted
+</Files>
+
+# Always deny credentials & language data files explicitly (belt + suspenders)
+<FilesMatch "(credentials|^\.|\.example|\.bak|\.sql|\.log)$">
+    Require all denied
+</FilesMatch>
