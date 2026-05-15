@@ -77,7 +77,8 @@ $conditions = $lang === 'en' ? [
                     <span class="tag"><i
                             class="fa-solid fa-leaf"></i><?= t('hero_kicker', 'عيادة متعددة التخصصات · عمّان') ?></span>
                     <h1 class="hero-h1">
-                        <?php $heroTitle = $slide ? tr($slide, 'title') : ''; if ($heroTitle): ?>
+                        <?php $heroTitle = $slide ? tr($slide, 'title') : '';
+                        if ($heroTitle): ?>
                             <?= e($heroTitle) ?>
                         <?php else: ?>
                             رعاية متخصّصة<br>تعيد لك <em>راحتك</em>.
@@ -114,7 +115,7 @@ $conditions = $lang === 'en' ? [
                         <?php if ($slide && !empty($slide['image'])): ?>
                             <img src="<?= $base_url ?>uploads/<?= e($slide['image']) ?>" alt="">
                         <?php else: ?>
-                            <div class="hero-figure-fallback"><i class="fa-solid fa-spa"></i></div>
+                            <img src="<?= $base_url ?>assets/img/back.webp" alt="" class="hero-figure-img">
                         <?php endif; ?>
                         <div class="hero-figure-stats">
                             <div class="hero-figure-stat">
@@ -276,7 +277,7 @@ $conditions = $lang === 'en' ? [
         <div class="why-grid">
             <div class="reveal">
                 <figure class="why-figure">
-                    <div class="why-figure-fallback"><i class="fa-solid fa-hands-holding-heart"></i></div>
+                    <img src="<?= $base_url ?>assets/img/WhyNoursTouch.avif" alt="" class="why-figure-img">
                 </figure>
             </div>
             <div class="reveal">
@@ -327,10 +328,10 @@ $conditions = $lang === 'en' ? [
                 <p><?= t('home_team_sub', 'معالجون من كبار الكفاءات في الأردن.') ?></p>
             </div>
 
-            <div class="team-grid reveal">
+            <div class="team-grid reveal" data-count="<?= min(4, count($therapists)) ?>">
                 <?php foreach ($therapists as $tp):
-                    $name = trim(tr($tp,'first_name') . ' ' . tr($tp,'last_name'));
-                    $role = tr($tp,'job_title') ?: tr($tp,'department'); ?>
+                    $name = trim(tr($tp, 'first_name') . ' ' . tr($tp, 'last_name'));
+                    $role = tr($tp, 'job_title') ?: tr($tp, 'department'); ?>
                     <a href="<?= $base_url ?>therapists" class="clinician">
                         <div class="clinician-photo">
                             <?php if (!empty($tp['avatar'])): ?>
@@ -352,117 +353,122 @@ $conditions = $lang === 'en' ? [
 <!-- ════════ PACKAGES — featured + compact list ════════ -->
 <?php if ($activePackages):
     // Pick "featured" (most_sessions) and the rest
-    usort($activePackages, fn($a,$b) => ((int)$b['total_sessions']) <=> ((int)$a['total_sessions']));
-    $feat   = $activePackages[0];
+    usort($activePackages, fn($a, $b) => ((int) $b['total_sessions']) <=> ((int) $a['total_sessions']));
+    $feat = $activePackages[0];
     $others = array_slice($activePackages, 1, 4);
-    $perSession = $feat['total_sessions'] > 0 ? round((float)$feat['price'] / (int)$feat['total_sessions']) : 0;
-?>
-<section class="section">
-    <div class="container">
-        <div class="heading-block reveal" style="text-align:center;margin-inline:auto">
-            <span class="tag"><i class="fa-solid fa-box-archive"></i><?= t('packages', 'الباقات') ?></span>
-            <h2><?= t('home_pkg_h_2', 'باقات تجمع بين <em>التوفير</em> و<em>الاستمرارية</em>.') ?></h2>
-            <p><?= t('home_pkg_sub', 'لخطط العلاج المستمرّة والعناية الدورية — بأسعار أفضل من الجلسة الواحدة.') ?></p>
-        </div>
-
-        <div class="pkg-showcase reveal">
-            <!-- Featured (big card, left in LTR) -->
-            <div class="pkg-feat-big">
-                <div class="pkg-feat-ribbon">
-                    <i class="fa-solid fa-star"></i>
-                    <?= t('best_value', 'الأفضل قيمة') ?>
-                </div>
-
-                <div class="pkg-feat-head">
-                    <div class="pkg-feat-icon"><i class="fa-solid fa-box-open"></i></div>
-                    <div>
-                        <div class="pkg-feat-eyebrow"><?= t('signature_package', 'باقة مميّزة') ?></div>
-                        <h3 class="pkg-feat-name"><?= e(tr($feat, 'name')) ?></h3>
-                    </div>
-                </div>
-
-                <div class="pkg-feat-price-row">
-                    <div class="pkg-feat-price">
-                        <span class="num"><?= number_format((float)$feat['price'], 0) ?></span>
-                        <span class="cur"><?= site_setting('currency','JOD') ?></span>
-                    </div>
-                    <?php if ($perSession): ?>
-                        <div class="pkg-feat-persess">
-                            <span><?= t('per_session', 'للجلسة الواحدة') ?></span>
-                            <strong dir="ltr"><?= number_format($perSession, 0) ?> <?= site_setting('currency','JOD') ?></strong>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <ul class="pkg-feat-features">
-                    <li>
-                        <div class="ff-num"><?= (int)$feat['total_sessions'] ?></div>
-                        <div>
-                            <strong><?= t('sessions_count', 'جلسة كاملة') ?></strong>
-                            <span><?= t('flexible_book', 'قابلة للحجز في أي وقت') ?></span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="ff-num"><?= (int)$feat['validity_days'] ?></div>
-                        <div>
-                            <strong><?= t('valid_days_label', 'يوم صلاحية') ?></strong>
-                            <span><?= t('use_within', 'استخدمها على راحتك') ?></span>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="pkg-feat-perks">
-                    <span><i class="fa-solid fa-circle-check"></i><?= t('priority_booking','حجز ذو أولوية') ?></span>
-                    <span><i class="fa-solid fa-circle-check"></i><?= t('free_consultation','استشارة مجانية') ?></span>
-                    <span><i class="fa-solid fa-circle-check"></i><?= t('progress_report','تقرير متابعة') ?></span>
-                </div>
-
-                <a href="<?= $base_url ?>booking?package=<?= (int)$feat['id'] ?>" class="btn btn-light pkg-feat-cta">
-                    <?= t('choose_this_package', 'اختر هذه الباقة') ?>
-                    <i class="fa-solid fa-arrow-<?= $arrow ?>"></i>
-                </a>
+    $perSession = $feat['total_sessions'] > 0 ? round((float) $feat['price'] / (int) $feat['total_sessions']) : 0;
+    ?>
+    <section class="section">
+        <div class="container">
+            <div class="heading-block reveal" style="text-align:center;margin-inline:auto">
+                <span class="tag"><i class="fa-solid fa-box-archive"></i><?= t('packages', 'الباقات') ?></span>
+                <h2><?= t('home_pkg_h_2', 'باقات تجمع بين <em>التوفير</em> و<em>الاستمرارية</em>.') ?></h2>
+                <p><?= t('home_pkg_sub', 'لخطط العلاج المستمرّة والعناية الدورية — بأسعار أفضل من الجلسة الواحدة.') ?></p>
             </div>
 
-            <!-- Other packages (compact rows on right) -->
-            <?php if ($others): ?>
-            <div class="pkg-others">
-                <div class="pkg-others-head">
-                    <span class="tag outline"><i class="fa-solid fa-layer-group"></i><?= t('more_options', 'خيارات أخرى') ?></span>
-                </div>
+            <div class="pkg-showcase reveal">
+                <!-- Featured (big card, left in LTR) -->
+                <div class="pkg-feat-big">
+                    <div class="pkg-feat-ribbon">
+                        <i class="fa-solid fa-star"></i>
+                        <?= t('best_value', 'الأفضل قيمة') ?>
+                    </div>
 
-                <?php foreach ($others as $p):
-                    $per = $p['total_sessions'] > 0 ? round((float)$p['price'] / (int)$p['total_sessions']) : 0;
-                ?>
-                    <a class="pkg-mini" href="<?= $base_url ?>booking?package=<?= (int)$p['id'] ?>">
-                        <div class="pkg-mini-icon"><i class="fa-solid fa-box-open"></i></div>
-                        <div class="pkg-mini-body">
-                            <div class="pkg-mini-name"><?= e(tr($p, 'name')) ?></div>
-                            <div class="pkg-mini-meta">
-                                <span><i class="fa-solid fa-list-check"></i><?= (int)$p['total_sessions'] ?> <?= t('sessions','جلسة') ?></span>
-                                <span><i class="fa-regular fa-calendar"></i><?= (int)$p['validity_days'] ?> <?= t('day','يوم') ?></span>
-                                <?php if ($per): ?>
-                                    <span class="pkg-mini-per" dir="ltr"><?= number_format($per,0) ?> <?= site_setting('currency','JOD') ?>/<?= t('sess','جلسة') ?></span>
-                                <?php endif; ?>
+                    <div class="pkg-feat-head">
+                        <div class="pkg-feat-icon"><i class="fa-solid fa-box-open"></i></div>
+                        <div>
+                            <div class="pkg-feat-eyebrow"><?= t('signature_package', 'باقة مميّزة') ?></div>
+                            <h3 class="pkg-feat-name"><?= e(tr($feat, 'name')) ?></h3>
+                        </div>
+                    </div>
+
+                    <div class="pkg-feat-price-row">
+                        <div class="pkg-feat-price">
+                            <span class="num"><?= number_format((float) $feat['price'], 0) ?></span>
+                            <span class="cur"><?= site_setting('currency', 'JOD') ?></span>
+                        </div>
+                        <?php if ($perSession): ?>
+                            <div class="pkg-feat-persess">
+                                <span><?= t('per_session', 'للجلسة الواحدة') ?></span>
+                                <strong dir="ltr"><?= number_format($perSession, 0) ?>
+                                    <?= site_setting('currency', 'JOD') ?></strong>
                             </div>
-                        </div>
-                        <div class="pkg-mini-price">
-                            <span class="num"><?= number_format((float)$p['price'], 0) ?></span>
-                            <span class="cur"><?= site_setting('currency','JOD') ?></span>
-                        </div>
-                        <div class="pkg-mini-arrow"><i class="fa-solid fa-arrow-<?= $arrow ?>"></i></div>
-                    </a>
-                <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
 
-                <!-- Trust line under packages list -->
-                <div class="pkg-others-foot">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span><?= t('pkg_guarantee', 'استرداد المبلغ المتبقي خلال 14 يوم لأي باقة لم تُستخدم.') ?></span>
+                    <ul class="pkg-feat-features">
+                        <li>
+                            <div class="ff-num"><?= (int) $feat['total_sessions'] ?></div>
+                            <div>
+                                <strong><?= t('sessions_count', 'جلسة كاملة') ?></strong>
+                                <span><?= t('flexible_book', 'قابلة للحجز في أي وقت') ?></span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ff-num"><?= (int) $feat['validity_days'] ?></div>
+                            <div>
+                                <strong><?= t('valid_days_label', 'يوم صلاحية') ?></strong>
+                                <span><?= t('use_within', 'استخدمها على راحتك') ?></span>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="pkg-feat-perks">
+                        <span><i class="fa-solid fa-circle-check"></i><?= t('priority_booking', 'حجز ذو أولوية') ?></span>
+                        <span><i class="fa-solid fa-circle-check"></i><?= t('free_consultation', 'استشارة مجانية') ?></span>
+                        <span><i class="fa-solid fa-circle-check"></i><?= t('progress_report', 'تقرير متابعة') ?></span>
+                    </div>
+
+                    <a href="<?= $base_url ?>booking?package=<?= (int) $feat['id'] ?>" class="btn btn-light pkg-feat-cta">
+                        <?= t('choose_this_package', 'اختر هذه الباقة') ?>
+                        <i class="fa-solid fa-arrow-<?= $arrow ?>"></i>
+                    </a>
                 </div>
+
+                <!-- Other packages (compact rows on right) -->
+                <?php if ($others): ?>
+                    <div class="pkg-others">
+                        <div class="pkg-others-head">
+                            <span class="tag outline"><i
+                                    class="fa-solid fa-layer-group"></i><?= t('more_options', 'خيارات أخرى') ?></span>
+                        </div>
+
+                        <?php foreach ($others as $p):
+                            $per = $p['total_sessions'] > 0 ? round((float) $p['price'] / (int) $p['total_sessions']) : 0;
+                            ?>
+                            <a class="pkg-mini" href="<?= $base_url ?>booking?package=<?= (int) $p['id'] ?>">
+                                <div class="pkg-mini-icon"><i class="fa-solid fa-box-open"></i></div>
+                                <div class="pkg-mini-body">
+                                    <div class="pkg-mini-name"><?= e(tr($p, 'name')) ?></div>
+                                    <div class="pkg-mini-meta">
+                                        <span><i class="fa-solid fa-list-check"></i><?= (int) $p['total_sessions'] ?>
+                                            <?= t('sessions', 'جلسة') ?></span>
+                                        <span><i class="fa-regular fa-calendar"></i><?= (int) $p['validity_days'] ?>
+                                            <?= t('day', 'يوم') ?></span>
+                                        <?php if ($per): ?>
+                                            <span class="pkg-mini-per" dir="ltr"><?= number_format($per, 0) ?>
+                                                <?= site_setting('currency', 'JOD') ?>/<?= t('sess', 'جلسة') ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="pkg-mini-price">
+                                    <span class="num"><?= number_format((float) $p['price'], 0) ?></span>
+                                    <span class="cur"><?= site_setting('currency', 'JOD') ?></span>
+                                </div>
+                                <div class="pkg-mini-arrow"><i class="fa-solid fa-arrow-<?= $arrow ?>"></i></div>
+                            </a>
+                        <?php endforeach; ?>
+
+                        <!-- Trust line under packages list -->
+                        <div class="pkg-others-foot">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span><?= t('pkg_guarantee', 'استرداد المبلغ المتبقي خلال 14 يوم لأي باقة لم تُستخدم.') ?></span>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </div>
-    </div>
-</section>
+    </section>
 <?php endif; ?>
 
 <!-- ════════ JOURNAL ════════ -->

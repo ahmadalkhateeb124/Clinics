@@ -36,8 +36,6 @@ $addressSet = site_setting('address', 'عمّان، الأردن');
 $hoursFrom  = site_setting('working_hours_from', '09:00');
 $hoursTo    = site_setting('working_hours_to', '21:00');
 $mapEmbed   = site_setting('google_map_embed', '');
-$fb         = site_setting('social_facebook', '');
-$ig         = site_setting('social_instagram', '');
 $arrow      = $dir === 'rtl' ? 'left' : 'right';
 ?>
 
@@ -208,19 +206,13 @@ $arrow      = $dir === 'rtl' ? 'left' : 'right';
                         </li>
                     </ul>
 
-                    <?php if ($fb || $ig || $phoneSet): ?>
+                    <?php $socials = social_active_links(); if ($socials): ?>
                     <div class="contact-aside-social">
                         <span class="contact-aside-social-label"><?= t('follow_us','تابعنا') ?></span>
                         <div class="contact-aside-social-btns">
-                            <?php if ($phoneSet): ?>
-                                <a href="<?= wa_link($phoneSet) ?>" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-                            <?php endif; ?>
-                            <?php if ($fb): ?>
-                                <a href="<?= e($fb) ?>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                            <?php endif; ?>
-                            <?php if ($ig): ?>
-                                <a href="<?= e($ig) ?>" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                            <?php endif; ?>
+                            <?php foreach ($socials as $s): ?>
+                                <a href="<?= e($s['url']) ?>" target="_blank" rel="noopener" aria-label="<?= e($s['label']) ?>"><i class="<?= e($s['icon']) ?>"></i></a>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     <?php endif; ?>

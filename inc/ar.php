@@ -327,6 +327,7 @@ return [
     'currency'         => 'د.أ',
     'login'            => 'تسجيل الدخول',
     'staff_login'      => 'تسجيل دخول الفريق',
+    'powered_by'       => 'طُوِّر بواسطة',
     'register'         => 'إنشاء حساب',
     'logout'           => 'تسجيل الخروج',
     'dashboard'        => 'لوحة التحكم',

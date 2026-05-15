@@ -98,32 +98,65 @@ function next_patient_code(): string {
 }
 
 /** Safe file upload to /uploads/<subdir>/.  Returns saved filename or null. */
-function upload_file(array $file, string $subdir, array $allowed = ['jpg','jpeg','png','pdf','webp','gif'], int $maxBytes = 8388608): ?array {
-    if (!isset($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) return null;
-    if ($file['size'] > $maxBytes) return null;
+function upload_file(array $file, string $subdir, array $allowed = ['jpg','jpeg','png','pdf','webp','gif'], int $maxBytes = 8388608, ?string &$reason = null): ?array {
+    $reason = null;
+    if (!isset($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
+        $reason = 'upload error code ' . ($file['error'] ?? '?');
+        return null;
+    }
+    if ($file['size'] > $maxBytes) { $reason = 'file too large ('.round($file['size']/1048576,2).'MB > '.round($maxBytes/1048576,2).'MB)'; return null; }
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
     // Wildcard '*' allows any extension/mime. Otherwise enforce the lists.
     $allowAny = in_array('*', $allowed, true);
-    if (!$allowAny && !in_array($ext, $allowed, true)) return null;
+    if (!$allowAny && !in_array($ext, $allowed, true)) { $reason = "extension .{$ext} not allowed"; return null; }
 
     // Always block dangerous executable types regardless of "allow any"
     $blocked = ['php','phtml','phar','phps','pl','py','rb','sh','bat','cmd','exe','dll','jsp','asp','aspx'];
-    if (in_array($ext, $blocked, true)) return null;
+    if (in_array($ext, $blocked, true)) { $reason = "extension .{$ext} is blocked"; return null; }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime  = $finfo->file($file['tmp_name']) ?: 'application/octet-stream';
     if (!$allowAny) {
-        $allowedMimes = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
-        if (!in_array($mime, $allowedMimes, true)) return null;
+        $isImageMime = (strpos($mime, 'image/') === 0);
+        $isPdf       = ($mime === 'application/pdf');
+        $ok = $isImageMime || $isPdf;
+        if (!$ok && function_exists('getimagesize')) {
+            $info = @getimagesize($file['tmp_name']);
+            if ($info !== false) $ok = true;
+        }
+        // Last resort: read magic bytes for formats that PHP/finfo on this server
+        // doesn't recognize (commonly AVIF, HEIC, newer WebP variants).
+        if (!$ok) {
+            $fh = @fopen($file['tmp_name'], 'rb');
+            if ($fh) {
+                $head = fread($fh, 32);
+                fclose($fh);
+                $h = $head ?: '';
+                // ISO BMFF container brands: AVIF, HEIC, HEIF
+                if (strlen($h) >= 12 && substr($h, 4, 4) === 'ftyp') {
+                    $brand = substr($h, 8, 4);
+                    if (in_array($brand, ['avif','avis','heic','heix','heim','heis','hevc','hevx','mif1','msf1'], true)) $ok = true;
+                }
+                // JPEG XL
+                elseif (strlen($h) >= 12 && substr($h, 0, 12) === "\x00\x00\x00\x0cJXL \x0d\x0a\x87\x0a") $ok = true;
+                // BMP
+                elseif (strlen($h) >= 2 && substr($h, 0, 2) === 'BM') $ok = true;
+                // ICO
+                elseif (strlen($h) >= 4 && substr($h, 0, 4) === "\x00\x00\x01\x00") $ok = true;
+                // TIFF (II*\0 or MM\0*)
+                elseif (strlen($h) >= 4 && (substr($h, 0, 4) === "II*\x00" || substr($h, 0, 4) === "MM\x00*")) $ok = true;
+            }
+        }
+        if (!$ok) { $reason = "mime '{$mime}' not accepted"; return null; }
     }
 
     $dir = rtrim(UPLOADS_PATH, '/') . '/' . trim($subdir, '/');
-    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) return null;
+    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) { $reason = "cannot create dir {$dir}"; return null; }
 
     $name = bin2hex(random_bytes(8)) . '_' . time() . ($ext !== '' ? '.' . $ext : '');
     $target = $dir . '/' . $name;
-    if (!move_uploaded_file($file['tmp_name'], $target)) return null;
+    if (!move_uploaded_file($file['tmp_name'], $target)) { $reason = 'move_uploaded_file failed'; return null; }
 
     return [
         'filename'      => $name,

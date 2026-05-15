@@ -19,20 +19,33 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && $action==='upload') {
     $cat = trim($_POST['category'] ?? '');
     $sort = (int)($_POST['sort_order'] ?? 0);
     $count = 0;
+    $failures = [];
     if (!empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
         $files = $_FILES['images'];
         for ($i=0; $i<count($files['name']); $i++) {
             $f = ['name'=>$files['name'][$i],'tmp_name'=>$files['tmp_name'][$i],'type'=>$files['type'][$i],'size'=>$files['size'][$i],'error'=>$files['error'][$i]];
-            if ($f['error'] !== UPLOAD_ERR_OK) continue;
-            $up = upload_file($f,'gallery',['jpg','jpeg','png','webp']);
+            if ($f['error'] !== UPLOAD_ERR_OK) {
+                $failures[] = ($f['name'] ?: 'file '.$i) . ': PHP upload error #' . $f['error'];
+                continue;
+            }
+            $reason = null;
+            $up = upload_file($f,'gallery',['jpg','jpeg','jfif','png','webp','gif','avif','bmp','heic','heif','tiff','tif','ico'], 16 * 1048576, $reason);
             if ($up) {
                 db()->prepare("INSERT INTO gallery (title,image,category,sort_order,is_active,created_at) VALUES (?,?,?,?,1,NOW())")
-                    ->execute([$title ?: $up['original_name'], $up['relative_path'], $cat ?: null, $sort]);
+                    ->execute([$title !== '' ? $title : null, $up['relative_path'], $cat ?: null, $sort]);
                 $count++;
+            } else {
+                $failures[] = ($f['name'] ?: 'file '.$i) . ': ' . ($reason ?: 'unknown');
             }
         }
     }
-    flash($count>0 ? 'success':'error', $count>0 ? "$count image(s) uploaded." : 'No images uploaded.');
+    if ($count > 0) {
+        flash('success', "$count image(s) uploaded.");
+    } else {
+        $msg = 'No images uploaded.';
+        if ($failures) $msg .= ' Reason: ' . implode(' | ', $failures);
+        flash('error', $msg);
+    }
     redirect(BP_URL.'admin/gallery.php');
 }
 

@@ -327,6 +327,7 @@ return [
     'currency'         => 'JOD',
     'login'            => 'Login',
     'staff_login'      => 'Staff login',
+    'powered_by'       => 'Developed by',
     'register'         => 'Register',
     'logout'           => 'Logout',
     'dashboard'        => 'Dashboard',

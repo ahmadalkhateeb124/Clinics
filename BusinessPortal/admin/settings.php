@@ -129,6 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'site_name_ar'  => 'general', 'site_name_en' => 'general',
         'contact_phone' => 'contact', 'contact_email' => 'contact', 'address' => 'contact',
         'clinic_logo'   => 'branding',
+        // Social media platforms
+        'social_whatsapp' => 'social', 'social_email'     => 'social',
+        'social_facebook' => 'social', 'social_instagram' => 'social', 'social_x' => 'social',
+        'social_youtube'  => 'social', 'social_tiktok'    => 'social', 'social_linkedin'  => 'social',
+        'social_snapchat' => 'social', 'social_telegram'  => 'social', 'social_threads'   => 'social',
+        'social_pinterest'=> 'social',
     ];
 
     foreach ($payload as $key => $val) {
@@ -149,10 +155,13 @@ $rows = db()->query("SELECT `key`, `value`, `group` FROM settings ORDER BY `grou
 $grouped = [];
 foreach ($rows as $r) $grouped[$r['group']][] = $r;
 
-// Clinic-profile fields are managed in their own card; hide from generic tabs
+// Clinic-profile and social fields are managed in their own cards; hide from generic tabs
 $profileKeys = ['site_name_ar','site_name_en','contact_phone','contact_email','address','clinic_logo'];
 foreach ($grouped as $g => &$items) {
-    $items = array_values(array_filter($items, fn($r) => !in_array($r['key'], $profileKeys, true)));
+    $items = array_values(array_filter($items, fn($r) =>
+        !in_array($r['key'], $profileKeys, true)
+        && strpos($r['key'], 'social_') !== 0
+    ));
 }
 unset($items);
 $grouped = array_filter($grouped, fn($v) => !empty($v));
@@ -286,6 +295,49 @@ include BP_PARTIALS . '/header.php';
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ════════ Social Media ════════ -->
+        <?php
+        $socialPlatforms = [
+            'whatsapp'  => ['icon' => 'fa-brands fa-whatsapp',   'label' => 'WhatsApp',    'ph' => '+962 7 0000 0000  ·  ' . __('uses_contact_phone_if_empty')],
+            'email'     => ['icon' => 'fa-regular fa-envelope',  'label' => 'Email',       'ph' => 'info@clinic.com  ·  ' . __('uses_contact_email_if_empty')],
+            'facebook'  => ['icon' => 'fa-brands fa-facebook-f', 'label' => 'Facebook',    'ph' => 'https://facebook.com/yourpage'],
+            'instagram' => ['icon' => 'fa-brands fa-instagram',  'label' => 'Instagram',   'ph' => 'https://instagram.com/yourpage'],
+            'x'         => ['icon' => 'fa-brands fa-x-twitter',  'label' => 'X (Twitter)', 'ph' => 'https://x.com/yourpage'],
+            'youtube'   => ['icon' => 'fa-brands fa-youtube',    'label' => 'YouTube',     'ph' => 'https://youtube.com/@yourchannel'],
+            'tiktok'    => ['icon' => 'fa-brands fa-tiktok',     'label' => 'TikTok',      'ph' => 'https://tiktok.com/@yourpage'],
+            'linkedin'  => ['icon' => 'fa-brands fa-linkedin-in','label' => 'LinkedIn',    'ph' => 'https://linkedin.com/company/yourpage'],
+            'snapchat'  => ['icon' => 'fa-brands fa-snapchat',   'label' => 'Snapchat',    'ph' => 'https://snapchat.com/add/yourpage'],
+            'telegram'  => ['icon' => 'fa-brands fa-telegram',   'label' => 'Telegram',    'ph' => 'https://t.me/yourpage'],
+            'threads'   => ['icon' => 'fa-brands fa-threads',    'label' => 'Threads',     'ph' => 'https://threads.net/@yourpage'],
+            'pinterest' => ['icon' => 'fa-brands fa-pinterest',  'label' => 'Pinterest',   'ph' => 'https://pinterest.com/yourpage'],
+        ];
+        ?>
+        <div class="settings-card">
+            <div class="settings-card-head">
+                <div>
+                    <h6 class="m-0"><i class="fa-brands fa-share-nodes text-teal me-1"></i> <?= __('social_media') ?></h6>
+                    <p class="text-muted small m-0"><?= __('social_media_help') ?></p>
+                </div>
+            </div>
+            <div class="social-grid">
+                <?php foreach ($socialPlatforms as $key => $p):
+                    $val = setting('social_' . $key, '');
+                ?>
+                    <div class="social-row <?= $val ? 'is-on' : '' ?>">
+                        <div class="social-icon"><i class="<?= e($p['icon']) ?>"></i></div>
+                        <div class="social-body">
+                            <label class="social-label"><?= e($p['label']) ?></label>
+                            <input type="url" name="settings[social_<?= e($key) ?>]"
+                                   class="social-input"
+                                   value="<?= e($val) ?>"
+                                   placeholder="<?= e($p['ph']) ?>"
+                                   dir="ltr">
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -484,6 +536,19 @@ include BP_PARTIALS . '/header.php';
 .contact-input{width:100%;border:0;background:transparent;padding:0;font-size:.95rem;color:#0f172a;outline:0}
 .contact-input::placeholder{color:#cbd5e1}
 .contact-help{font-size:.7rem;color:#94a3b8;margin-top:.15rem}
+
+/* ═══ Social media grid ═══ */
+.social-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;padding:1.25rem}
+.social-row{display:flex;gap:.7rem;padding:.7rem .9rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;transition:.15s}
+.social-row:focus-within{border-color:#5eead4;background:#f0fdfa;box-shadow:0 0 0 3px rgba(20,184,166,.08)}
+.social-row.is-on{border-color:#99f6e4;background:#f0fdfa}
+.social-icon{width:36px;height:36px;flex-shrink:0;border-radius:10px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.social-row.is-on .social-icon{background:#0d9488}
+.social-body{flex:1;min-width:0}
+.social-label{display:block;font-size:.7rem;color:#64748b;font-weight:600;letter-spacing:.02em;margin-bottom:.1rem}
+.social-input{width:100%;border:0;background:transparent;padding:0;font-size:.88rem;color:#0f172a;outline:0;font-family:inherit}
+.social-input::placeholder{color:#cbd5e1}
+@media (max-width:768px){.social-grid{grid-template-columns:1fr}}
 
 /* ═══ Advanced settings card ═══ */
 .settings-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden}

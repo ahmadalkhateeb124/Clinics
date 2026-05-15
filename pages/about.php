@@ -104,7 +104,7 @@ $arrow = $dir === 'rtl' ? 'left' : 'right';
             </div>
             <div>
                 <figure class="why-figure">
-                    <div class="why-figure-fallback"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <img src="<?= $base_url ?>assets/img/WhyNoursTouch.avif" alt="" class="why-figure-img">
                 </figure>
             </div>
         </div>

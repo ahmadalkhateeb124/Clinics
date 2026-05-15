@@ -18,16 +18,9 @@ $footerName = ($lang === 'en')
                 <?php endif; ?>
                 <p class="footer-tagline"><?= t('footer_about', 'علاج طبيعي · مساج · حجامة · تقشير · استشارات. كل ذلك بأيدٍ خبيرة، ولمسة دافئة.') ?></p>
                 <div class="footer-social">
-                    <?php $fb = site_setting('social_facebook',''); if ($fb): ?>
-                        <a href="<?= e($fb) ?>" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                    <?php endif; ?>
-                    <?php $ig = site_setting('social_instagram',''); if ($ig): ?>
-                        <a href="<?= e($ig) ?>" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                    <?php endif; ?>
-                    <?php $wa = site_setting('contact_phone',''); if ($wa): ?>
-                        <a href="<?= wa_link($wa) ?>" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-                    <?php endif; ?>
-                    <a href="mailto:<?= e(site_setting('contact_email','info@nourstouch.com')) ?>" aria-label="Email"><i class="fa-regular fa-envelope"></i></a>
+                    <?php foreach (social_active_links() as $s): ?>
+                        <a href="<?= e($s['url']) ?>" target="_blank" rel="noopener" aria-label="<?= e($s['label']) ?>"><i class="<?= e($s['icon']) ?>"></i></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
@@ -57,30 +50,48 @@ $footerName = ($lang === 'en')
             <!-- Contact -->
             <div class="footer-col">
                 <h6><?= t('contact') ?></h6>
+                <?php
+                $fAddress = trim(site_setting('address', ''));
+                $fPhone   = trim(site_setting('contact_phone', ''));
+                $fEmail   = trim(site_setting('contact_email', ''));
+                $fFrom    = trim(site_setting('working_hours_from', ''));
+                $fTo      = trim(site_setting('working_hours_to', ''));
+                ?>
                 <ul class="footer-contact">
-                    <li>
-                        <i class="fa-solid fa-location-dot"></i>
-                        <?= e(site_setting('address', 'Amman, Jordan')) ?>
-                    </li>
-                    <li>
-                        <i class="fa-solid fa-phone"></i>
-                        <a href="<?= tel_link(site_setting('contact_phone','+962700000000')) ?>" dir="ltr"><?= e(site_setting('contact_phone', '+962 7 0000 0000')) ?></a>
-                    </li>
-                    <li>
-                        <i class="fa-regular fa-envelope"></i>
-                        <a href="mailto:<?= e(site_setting('contact_email','info@nourstouch.com')) ?>" dir="ltr"><?= e(site_setting('contact_email','info@nourstouch.com')) ?></a>
-                    </li>
-                    <li>
-                        <i class="fa-regular fa-clock"></i>
-                        <span dir="ltr"><?= e(site_setting('working_hours_from','09:00')) ?> – <?= e(site_setting('working_hours_to','21:00')) ?></span>
-                    </li>
+                    <?php if ($fAddress): ?>
+                        <li>
+                            <i class="fa-solid fa-location-dot"></i>
+                            <?= e($fAddress) ?>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($fPhone): ?>
+                        <li>
+                            <i class="fa-solid fa-phone"></i>
+                            <a href="<?= tel_link($fPhone) ?>" dir="ltr"><?= e($fPhone) ?></a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($fEmail): ?>
+                        <li>
+                            <i class="fa-regular fa-envelope"></i>
+                            <a href="mailto:<?= e($fEmail) ?>" dir="ltr"><?= e($fEmail) ?></a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($fFrom && $fTo): ?>
+                        <li>
+                            <i class="fa-regular fa-clock"></i>
+                            <span dir="ltr"><?= e($fFrom) ?> – <?= e($fTo) ?></span>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
 
         <div class="site-footer-bottom">
             <div>© <?= date('Y') ?> <?= e($footerName) ?>. <?= t('all_rights_reserved', 'جميع الحقوق محفوظة.') ?></div>
-            <div><?= t('crafted_in', 'صُنع بعناية في عمّان.') ?></div>
+            <a class="footer-powered" href="https://webkoit.com" target="_blank" rel="noopener" aria-label="Webkoit">
+                <span><?= t('powered_by', 'مدعوم من') ?></span>
+                <img src="<?= $base_url ?>assets/img/logo-webkoit.png" alt="Webkoit">
+            </a>
         </div>
     </div>
 </footer>

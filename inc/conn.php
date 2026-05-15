@@ -76,6 +76,45 @@ function tel_link(string $phone): string {
 function wa_link(string $phone): string {
     return 'https://wa.me/' . preg_replace('/\D/', '', $phone);
 }
+
+/**
+ * Returns the list of supported social platforms with their icon, label,
+ * setting key, and the URL the admin entered (empty if not configured).
+ * Use social_active_links() to get only the platforms that have a URL.
+ */
+function social_platforms(): array {
+    return [
+        'whatsapp'  => ['icon' => 'fa-brands fa-whatsapp',   'label' => 'WhatsApp'],
+        'email'     => ['icon' => 'fa-regular fa-envelope',  'label' => 'Email'],
+        'facebook'  => ['icon' => 'fa-brands fa-facebook-f', 'label' => 'Facebook'],
+        'instagram' => ['icon' => 'fa-brands fa-instagram',  'label' => 'Instagram'],
+        'x'         => ['icon' => 'fa-brands fa-x-twitter',  'label' => 'X (Twitter)'],
+        'youtube'   => ['icon' => 'fa-brands fa-youtube',    'label' => 'YouTube'],
+        'tiktok'    => ['icon' => 'fa-brands fa-tiktok',     'label' => 'TikTok'],
+        'linkedin'  => ['icon' => 'fa-brands fa-linkedin-in','label' => 'LinkedIn'],
+        'snapchat'  => ['icon' => 'fa-brands fa-snapchat',   'label' => 'Snapchat'],
+        'telegram'  => ['icon' => 'fa-brands fa-telegram',   'label' => 'Telegram'],
+        'threads'   => ['icon' => 'fa-brands fa-threads',    'label' => 'Threads'],
+        'pinterest' => ['icon' => 'fa-brands fa-pinterest',  'label' => 'Pinterest'],
+    ];
+}
+
+function social_active_links(): array {
+    $out = [];
+    foreach (social_platforms() as $key => $p) {
+        $raw = trim(site_setting('social_' . $key, ''));
+        if ($raw === '') continue;
+        if ($key === 'whatsapp') {
+            $url = (stripos($raw, 'http') === 0) ? $raw : wa_link($raw);
+        } elseif ($key === 'email') {
+            $url = (stripos($raw, 'mailto:') === 0 || stripos($raw, 'http') === 0) ? $raw : ('mailto:' . $raw);
+        } else {
+            $url = $raw;
+        }
+        $out[] = ['key' => $key, 'url' => $url, 'icon' => $p['icon'], 'label' => $p['label']];
+    }
+    return $out;
+}
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 
 function format_money($amount): string {

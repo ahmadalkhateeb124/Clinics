@@ -72,7 +72,7 @@ $L = [
     'contact_support'=> $lang === 'ar' ? 'تواصل مع الدعم' : 'Contact support',
     'all_rights'     => $lang === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved',
     'show_pw'        => $lang === 'ar' ? 'إظهار كلمة المرور' : 'Show password',
-    'powered_by'     => $lang === 'ar' ? 'مدعوم من' : 'Powered by',
+    'powered_by'     => $lang === 'ar' ? 'طُوِّر بواسطة' : 'Developed by',
 ];
 ?><!DOCTYPE html>
 <html lang="<?= e($lang) ?>" dir="<?= e($dir) ?>">
